@@ -1,4 +1,4 @@
 FastAPI
 sentence-transformers
 pydantic
-uvicorn
+uvicorn[standard]
