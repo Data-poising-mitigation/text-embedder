@@ -1,26 +1,32 @@
 from fastapi import APIRouter, HTTPException, status, Query
 from app.core.config import settings
-from app.schema.schemas import ChunkResponseModel, ChunkRequestModel
-from app.services.base import get_chunker_for_strategy, ChunkingError
+from app.schema.schemas import EmbedRequest, EmbedResponse
+from app.services.embed_service import EmbedService, LimitExceededError
 
-router = APIRouter(prefix="/chunk", tags=["Chunk"])
+router = APIRouter()
 
-@router.post("", response_model=ChunkResponseModel)
-async def chunk_document(
-    payload: ChunkRequestModel,
-    strategy: str = Query("fixed_size", description="Chunking strategy to use"),
-):
-    chunker = get_chunker_for_strategy(strategy)
-    if not chunker:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported chunking strategy: {strategy}",
-        )
+_embed_service = EmbedService()
+
+@router.post("/embed", response_model=EmbedResponse, status_code=status.HTTP_200_OK)
+def embed(req: EmbedRequest) -> EmbedResponse:
+    """
+    Generate embeddings for the provided texts using the specified model.
+    Args:
+        req (EmbedRequest): The embedding request containing texts and optional model name.
+
+    Returns:
+        EmbedResponse: The response containing embeddings and model info.
+    """
     try:
-        chunks = chunker.chunk(payload.text, payload.chunk_size, payload.overlap)
-    except ChunkingError as e:
+        response = _embed_service.embed(texts=req.texts, model_name=req.model)
+        return response
+    except LimitExceededError as e:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=str(e),
+        )
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-    return ChunkResponseModel(chunks=chunks)
