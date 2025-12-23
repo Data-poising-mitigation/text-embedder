@@ -1,0 +1,4 @@
+FastAPI
+sentence-transformers
+pydantic
+uvicorn
