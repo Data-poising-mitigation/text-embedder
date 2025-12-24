@@ -3,4 +3,4 @@ pydantic
 uvicorn[standard]
 numpy<2
 sentence-transformers
-torch==2.2.2+cpu
+torch==2.2.2
