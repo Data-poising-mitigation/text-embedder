@@ -3,9 +3,11 @@ from typing import Dict
 from app.core.config import settings
 from app.models.base import Embedder
 from app.models.minilm_l6_v2 import MiniLML6V2
+from app.models.mpnet_base_v2 import MpnetBaseV2
 
 _SUPPORTED_MODELS = {
     "all-minilm-l6-v2": MiniLML6V2,
+    "all-mpnet-base-v2": MpnetBaseV2,
 }
 
 _instance_cache: Dict[str, Embedder] = {}
