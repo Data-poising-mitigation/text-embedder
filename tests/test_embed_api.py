@@ -44,6 +44,25 @@ def test_embed_unknown_model_returns_400(monkeypatch):
     assert r.status_code == 400
 
 
+def test_embed_uses_default_model_when_model_omitted(client):
+    r = client.post("/embed", json={"texts": ["hello"]})
+    assert r.status_code == 200
+    body = r.json()
+    # Service should fall back to DEFAULT_MODEL from settings (all-minilm-l6-v2).
+    assert body["model"] == "all-minilm-l6-v2"
+    assert body["dim"] == 384
+    assert len(body["embeddings"]) == 1
+    assert len(body["embeddings"][0]) == 384
+
+
+def test_embed_with_alternate_model_name(client):
+    r = client.post("/embed", json={"model": "all-mpnet-base-v2", "texts": ["hello"]})
+    assert r.status_code == 200
+    body = r.json()
+    # The embed API should echo back the requested model name.
+    assert body["model"] == "all-mpnet-base-v2"
+
+
 def test_embed_limit_exceeded_returns_413(monkeypatch):
     # This assumes your service raises LimitExceededError on too many texts.
     from app.services.embed_service import LimitExceededError
